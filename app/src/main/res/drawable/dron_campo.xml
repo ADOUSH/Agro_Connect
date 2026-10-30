@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ilustración de la pantalla de inicio: dron fumigador sobre un campo de cultivo. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="400dp"
+    android:height="260dp"
+    android:viewportWidth="400"
+    android:viewportHeight="260">
+
+    <!-- Cielo -->
+    <path android:pathData="M0,0 L400,0 L400,160 L0,160 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="0"
+                android:endY="160"
+                android:type="linear">
+                <item android:color="#FF3FA9F5" android:offset="0.0" />
+                <item android:color="#FFBDE5FB" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Sol con halo -->
+    <path android:fillColor="#33FFF59D" android:pathData="M272,58 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0 Z" />
+    <path android:fillColor="#FFFFF176" android:pathData="M292,58 a26,26 0 1,1 52,0 a26,26 0 1,1 -52,0 Z" />
+
+    <!-- Nubes -->
+    <path android:fillColor="#E6FFFFFF" android:pathData="M46,38 a34,9 0 1,1 68,0 a34,9 0 1,1 -68,0 ZM82,32 a22,8 0 1,1 44,0 a22,8 0 1,1 -44,0 ZM40,33 a20,7 0 1,1 40,0 a20,7 0 1,1 -40,0 Z M220,62 a30,8 0 1,1 60,0 a30,8 0 1,1 -60,0 ZM252,57 a18,7 0 1,1 36,0 a18,7 0 1,1 -36,0 Z" />
+
+    <!-- Cerros lejanos -->
+    <path
+        android:fillColor="#FF9CCC65"
+        android:pathData="M0,150 C50,118 110,126 170,142 C230,158 300,112 400,134 L400,160 L0,160 Z" />
+    <path
+        android:fillColor="#FF7CB342"
+        android:pathData="M0,152 C70,134 140,140 210,150 C280,160 340,138 400,146 L400,160 L0,160 Z" />
+
+    <!-- Árboles en el horizonte -->
+    <path android:fillColor="#FF2E7D32" android:pathData="M10,136 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0 Z M39,139 a9,9 0 1,1 18,0 a9,9 0 1,1 -18,0 Z M63,141 a7,7 0 1,1 14,0 a7,7 0 1,1 -14,0 Z M330,140 a8,8 0 1,1 16,0 a8,8 0 1,1 -16,0 Z M351,137 a11,11 0 1,1 22,0 a11,11 0 1,1 -22,0 Z M372,134 a14,14 0 1,1 28,0 a14,14 0 1,1 -28,0 Z " />
+
+    <!-- Campo -->
+    <path android:pathData="M0,150 L400,150 L400,260 L0,260 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="150"
+                android:endX="0"
+                android:endY="260"
+                android:type="linear">
+                <item android:color="#FF8BC34A" android:offset="0.0" />
+                <item android:color="#FF33691E" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Franjas y surcos del cultivo -->
+    <path android:fillColor="#2233691E" android:pathData="M200,150 L-300,260 L-260,260 Z M200,150 L-220,260 L-180,260 Z M200,150 L-140,260 L-100,260 Z M200,150 L-60,260 L-20,260 Z M200,150 L20,260 L60,260 Z M200,150 L100,260 L140,260 Z M200,150 L180,260 L220,260 Z M200,150 L260,260 L300,260 Z M200,150 L340,260 L380,260 Z M200,150 L420,260 L460,260 Z M200,150 L500,260 L540,260 Z M200,150 L580,260 L620,260 Z M200,150 L660,260 L700,260 Z" />
+    <path
+        android:strokeColor="#66AED581"
+        android:strokeWidth="1.5"
+        android:pathData="M200,150 L-300,260 M200,150 L-260,260 M200,150 L-220,260 M200,150 L-180,260 M200,150 L-140,260 M200,150 L-100,260 M200,150 L-60,260 M200,150 L-20,260 M200,150 L20,260 M200,150 L60,260 M200,150 L100,260 M200,150 L140,260 M200,150 L180,260 M200,150 L220,260 M200,150 L260,260 M200,150 L300,260 M200,150 L340,260 M200,150 L380,260 M200,150 L420,260 M200,150 L460,260 M200,150 L500,260 M200,150 L540,260 M200,150 L580,260 M200,150 L620,260 M200,150 L660,260" />
+
+    <!-- Sombra del dron sobre el campo -->
+    <path android:fillColor="#40000000" android:pathData="M156,188 a44,6 0 1,1 88,0 a44,6 0 1,1 -88,0 Z" />
+
+    <!-- Rocío de la fumigación -->
+    <path
+        android:fillColor="#40E1F5FE"
+        android:pathData="M194,112 L158,186 L242,186 L206,112 Z" />
+    <path android:fillColor="#B3FFFFFF" android:pathData="M182,128 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z M212,134 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z M194,146 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z M170,156 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z M222,158 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z M200,166 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z M184,172 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z M214,174 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z " />
+
+    <!-- Patas de aterrizaje -->
+    <path
+        android:strokeColor="#FF263238"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M188,102 L182,116 M212,102 L218,116 M178,116 L190,116 M210,116 L222,116" />
+
+    <!-- Brazos -->
+    <path
+        android:strokeColor="#FF455A64"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M200,96 L150,92 M200,96 L250,92 M200,92 L172,82 M200,92 L228,82" />
+
+    <!-- Motores -->
+    <path android:fillColor="#FF263238" android:pathData="M145,92 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0 Z" />
+    <path android:fillColor="#FF263238" android:pathData="M245,92 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0 Z" />
+    <path android:fillColor="#FF37474F" android:pathData="M168,82 a4,4 0 1,1 8,0 a4,4 0 1,1 -8,0 Z" />
+    <path android:fillColor="#FF37474F" android:pathData="M224,82 a4,4 0 1,1 8,0 a4,4 0 1,1 -8,0 Z" />
+
+    <!-- Hélices en movimiento -->
+    <path android:fillColor="#66263238" android:pathData="M126,86 a24,3 0 1,1 48,0 a24,3 0 1,1 -48,0 Z M226,86 a24,3 0 1,1 48,0 a24,3 0 1,1 -48,0 Z M156,76 a16,3 0 1,1 32,0 a16,3 0 1,1 -32,0 Z M212,76 a16,3 0 1,1 32,0 a16,3 0 1,1 -32,0 Z " />
+
+    <!-- Cuerpo -->
+    <path android:fillColor="#FFFAFAFA" android:pathData="M178,94 a22,11 0 1,1 44,0 a22,11 0 1,1 -44,0 Z" />
+    <path android:fillColor="#FF7CB342" android:pathData="M186,97 a14,5 0 1,1 28,0 a14,5 0 1,1 -28,0 Z" />
+
+    <!-- Cámara -->
+    <path android:fillColor="#FF263238" android:pathData="M195,107 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0 Z" />
+    <path android:fillColor="#FF4FC3F7" android:pathData="M199,106 a2,2 0 1,1 4,0 a2,2 0 1,1 -4,0 Z" />
+</vector>
