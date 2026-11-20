@@ -2,10 +2,17 @@ package com.duoc.agroconnect.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFA5D6A7)
-val PurpleGrey80 = Color(0xFFC5E1A5)
-val Pink80 = Color(0xFFFFCC80)
+// Fondos y superficies blancas
+val BlancoPuro = Color(0xFFFFFFFF)
+val GrisFondoSuave = Color(0xFFF6F8FA)
+val GrisBorde = Color(0xFFE5E7EB)
 
-val Purple40 = Color(0xFF2E7D32)
-val PurpleGrey40 = Color(0xFF558B2F)
-val Pink40 = Color(0xFFEF6C00)
+// Negros y textos
+val NegroIntenso = Color(0xFF111315)
+val GrisTextoSecundario = Color(0xFF5F6368)
+
+// Acentos Azul y Rojo
+val AzulAcento = Color(0xFF1D4ED8)
+val AzulSuave = Color(0xFFDBEAFE)
+val RojoAcento = Color(0xFFDC2626)
+val RojoSuave = Color(0xFFFEE2E2)
