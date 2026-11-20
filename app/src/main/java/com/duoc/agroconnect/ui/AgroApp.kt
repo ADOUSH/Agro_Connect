@@ -1,13 +1,14 @@
 package com.duoc.agroconnect.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +35,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
@@ -44,6 +47,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -77,22 +81,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.duoc.agroconnect.AppContainer
 import com.duoc.agroconnect.NotificationHelper
-import com.duoc.agroconnect.R
 import com.duoc.agroconnect.model.EstadoDron
 import com.duoc.agroconnect.model.EstadoPedido
 import com.duoc.agroconnect.model.Mision
@@ -128,319 +131,414 @@ import java.util.Locale
 @Composable
 fun AgroApp() {
     var logueado by remember { mutableStateOf(AppContainer.authRepository.usuarioActual != null) }
-    var mostrarRegistro by rememberSaveable { mutableStateOf(false) }
 
-    when {
-        logueado -> {
-            HomeScreen(onLogout = {
-                AppContainer.authRepository.cerrarSesion()
-                logueado = false
-                mostrarRegistro = false
-            })
-        }
-        mostrarRegistro -> {
-            RegistroScreen(
-                onRegistroOk = {
-                    mostrarRegistro = false
-                    logueado = true
-                },
-                onVolverLogin = { mostrarRegistro = false }
-            )
-        }
-        else -> {
-            LoginScreen(
-                onLoginOk = { logueado = true },
-                onIrRegistro = { mostrarRegistro = true }
-            )
-        }
+    if (logueado) {
+        HomeScreen(onLogout = {
+            AppContainer.authRepository.cerrarSesion()
+            logueado = false
+        })
+    } else {
+        AuthScreen(onAuthSuccess = { logueado = true })
     }
 }
 
-/* ----------------------------- LOGIN ----------------------------- */
+/* --------------------- INICIO DE SESIÓN Y REGISTRO --------------------- */
 
 @Composable
-fun LoginScreen(
-    onLoginOk: () -> Unit,
-    onIrRegistro: () -> Unit,
-    vm: LoginViewModel = viewModel()
-) {
-    var email by rememberSaveable { mutableStateOf("") }
-    var clave by rememberSaveable { mutableStateOf("") }
-    val error by vm.error.collectAsState()
-
-    Scaffold(containerColor = BlancoPuro) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = padding.calculateBottomPadding())
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.dron_campo),
-                    contentDescription = "Dron fumigando un campo de cultivo",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-                // Degradado suave hacia el fondo blanco
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, BlancoPuro)
-                            )
-                        )
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Agro",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = NegroIntenso
-                    )
-                    Text(
-                        "Connect",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = AzulAcento
-                    )
-                }
-                Text(
-                    "Control inteligente de drones agrícolas",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = GrisTextoSecundario
-                )
-                Spacer(Modifier.height(24.dp))
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Correo electrónico") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Email, contentDescription = null, tint = GrisTextoSecundario)
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = coloresCampoTexto(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = clave,
-                    onValueChange = { clave = it },
-                    label = { Text("Contraseña") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Lock, contentDescription = null, tint = GrisTextoSecundario)
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = coloresCampoTexto(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                if (error.isNotEmpty()) {
-                    Spacer(Modifier.height(10.dp))
-                    Text(error, color = RojoAcento, style = MaterialTheme.typography.bodySmall)
-                }
-                Spacer(Modifier.height(20.dp))
-                Button(
-                    onClick = { if (vm.iniciarSesion(email, clave)) onLoginOk() },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = NegroIntenso,
-                        contentColor = BlancoPuro
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Text("Iniciar sesión", fontWeight = FontWeight.SemiBold)
-                }
-
-                Spacer(Modifier.height(10.dp))
-                OutlinedButton(
-                    onClick = {
-                        vm.limpiarError()
-                        onIrRegistro()
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, AzulAcento),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AzulAcento),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Text("¿No tienes cuenta? Regístrate aquí", fontWeight = FontWeight.SemiBold)
-                }
-
-                Spacer(Modifier.height(20.dp))
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = GrisFondoSuave,
-                    border = BorderStroke(1.dp, GrisBorde),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        "Acceso rápido de prueba:\nagricultor@tecmundo.cl  ·  agro1234",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GrisTextoSecundario,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/* --------------------------- REGISTRO ---------------------------- */
-
-@Composable
-fun RegistroScreen(
-    onRegistroOk: () -> Unit,
-    onVolverLogin: () -> Unit,
+fun AuthScreen(
+    onAuthSuccess: () -> Unit,
     vm: LoginViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    var esModoRegistro by rememberSaveable { mutableStateOf(false) }
+
     var nombre by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var clave by rememberSaveable { mutableStateOf("") }
     var confirmarClave by rememberSaveable { mutableStateOf("") }
+    var mostrarClave by rememberSaveable { mutableStateOf(false) }
+
     val error by vm.error.collectAsState()
 
     Scaffold(containerColor = BlancoPuro) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .padding(padding)
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.height(12.dp))
+
+            // 1. Emblema minimalista de dron en negro y azul
+            EmblemaDronTech()
+
+            Spacer(Modifier.height(16.dp))
+
+            // Etiqueta superior
+            Surface(
+                shape = CircleShape,
+                color = AzulSuave
+            ) {
+                Text(
+                    text = "GESTION INTELIGENTE DE SERVICIOS AGRICOLAS",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = AzulAcento,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
+                )
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // Título de marca bicolor
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Agro",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = NegroIntenso
+                )
+                Text(
+                    text = "Connect",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = AzulAcento
+                )
+            }
+
             Text(
-                "Crear cuenta",
-                style = MaterialTheme.typography.headlineMedium,
-                color = NegroIntenso
-            )
-            Text(
-                "Regístrate para gestionar tus drones y pedidos",
+                text = if (esModoRegistro) {
+                    "Crea tu perfil de operador para gestionar vuelos"
+                } else {
+                    "Ingresa para monitorear tu flota en tiempo real"
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = GrisTextoSecundario
             )
+
             Spacer(Modifier.height(24.dp))
 
-            OutlinedTextField(
-                value = nombre,
-                onValueChange = { nombre = it },
-                label = { Text("Nombre completo") },
-                leadingIcon = {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = GrisTextoSecundario)
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = coloresCampoTexto(),
+            // 2. Selector tipo cápsula (Iniciar sesión | Crear cuenta)
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = GrisFondoSuave,
+                border = BorderStroke(1.dp, GrisBorde),
                 modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
-                leadingIcon = {
-                    Icon(Icons.Default.Email, contentDescription = null, tint = GrisTextoSecundario)
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = coloresCampoTexto(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = clave,
-                onValueChange = { clave = it },
-                label = { Text("Contraseña (mín. 6 caracteres)") },
-                leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = GrisTextoSecundario)
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = coloresCampoTexto(),
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = confirmarClave,
-                onValueChange = { confirmarClave = it },
-                label = { Text("Confirmar contraseña") },
-                leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = GrisTextoSecundario)
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = coloresCampoTexto(),
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            if (error.isNotEmpty()) {
-                Spacer(Modifier.height(10.dp))
-                Text(error, color = RojoAcento, style = MaterialTheme.typography.bodySmall)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                ) {
+                    BotonTabAuth(
+                        texto = "Iniciar sesión",
+                        seleccionado = !esModoRegistro,
+                        onClick = {
+                            esModoRegistro = false
+                            vm.limpiarError()
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                    BotonTabAuth(
+                        texto = "Crear cuenta",
+                        seleccionado = esModoRegistro,
+                        onClick = {
+                            esModoRegistro = true
+                            vm.limpiarError()
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             Spacer(Modifier.height(20.dp))
-            Button(
-                onClick = {
-                    if (vm.registrar(nombre, email, clave, confirmarClave)) {
-                        NotificationHelper.mostrar(
-                            context = context,
-                            titulo = "¡Bienvenido a AgroConnect!",
-                            mensaje = "Hola ${nombre.trim()}, tu cuenta fue creada con éxito."
-                        )
-                        onRegistroOk()
-                    }
-                },
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NegroIntenso,
-                    contentColor = BlancoPuro
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text("Registrarme", fontWeight = FontWeight.SemiBold)
-            }
 
-            Spacer(Modifier.height(8.dp))
-            TextButton(
-                onClick = {
-                    vm.limpiarError()
-                    onVolverLogin()
-                },
+            // 3. Tarjeta blanca con borde fino para el formulario
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = BlancoPuro,
+                border = BorderStroke(1.dp, GrisBorde),
+                shadowElevation = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Ya tengo cuenta · Volver al inicio", color = AzulAcento)
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    AnimatedVisibility(visible = esModoRegistro) {
+                        OutlinedTextField(
+                            value = nombre,
+                            onValueChange = { nombre = it },
+                            label = { Text("Nombre completo") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Person, contentDescription = null, tint = NegroIntenso)
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = coloresCampoTexto(),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Correo electrónico") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Email, contentDescription = null, tint = NegroIntenso)
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
+                        colors = coloresCampoTexto(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedTextField(
+                        value = clave,
+                        onValueChange = { clave = it },
+                        label = {
+                            Text(if (esModoRegistro) "Contraseña (mín. 6 caracteres)" else "Contraseña")
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, contentDescription = null, tint = NegroIntenso)
+                        },
+                        trailingIcon = {
+                            TextButton(onClick = { mostrarClave = !mostrarClave }) {
+                                Text(
+                                    text = if (mostrarClave) "Ocultar" else "Ver",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = AzulAcento
+                                )
+                            }
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
+                        colors = coloresCampoTexto(),
+                        visualTransformation = if (mostrarClave) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    AnimatedVisibility(visible = esModoRegistro) {
+                        OutlinedTextField(
+                            value = confirmarClave,
+                            onValueChange = { confirmarClave = it },
+                            label = { Text("Confirmar contraseña") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Lock, contentDescription = null, tint = NegroIntenso)
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = coloresCampoTexto(),
+                            visualTransformation = if (mostrarClave) {
+                                VisualTransformation.None
+                            } else {
+                                PasswordVisualTransformation()
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // Banner de error en rojo si los datos fallan
+                    if (error.isNotEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = RojoSuave,
+                            border = BorderStroke(1.dp, RojoAcento.copy(alpha = 0.35f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = RojoAcento,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = error,
+                                    color = RojoAcento,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(2.dp))
+
+                    // Botón principal negro
+                    Button(
+                        onClick = {
+                            if (esModoRegistro) {
+                                if (vm.registrar(nombre, email, clave, confirmarClave)) {
+                                    NotificationHelper.mostrar(
+                                        context = context,
+                                        titulo = "¡Bienvenido a AgroConnect!",
+                                        mensaje = "Hola ${nombre.trim()}, tu cuenta fue creada con éxito."
+                                    )
+                                    onAuthSuccess()
+                                }
+                            } else {
+                                if (vm.iniciarSesion(email, clave)) {
+                                    onAuthSuccess()
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NegroIntenso,
+                            contentColor = BlancoPuro
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Text(
+                            text = if (esModoRegistro) "Registrarme y entrar" else "Iniciar sesión",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = BlancoPuro
+                        )
+                    }
+                }
             }
+
+            // 4. Acceso rápido con 1 toque para pruebas (solo en modo Login)
+            if (!esModoRegistro) {
+                Spacer(Modifier.height(18.dp))
+                Surface(
+                    onClick = {
+                        email = "agricultor@tecmundo.cl"
+                        clave = "agro1234"
+                        vm.limpiarError()
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    color = GrisFondoSuave,
+                    border = BorderStroke(1.dp, GrisBorde),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Cuenta de demostración",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = NegroIntenso
+                            )
+                            Text(
+                                text = "agricultor@tecmundo.cl · agro1234",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GrisTextoSecundario
+                            )
+                        }
+                        Surface(
+                            shape = CircleShape,
+                            color = AzulSuave
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = AzulAcento,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "Rellenar",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = AzulAcento
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BotonTabAuth(
+    texto: String,
+    seleccionado: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = if (seleccionado) NegroIntenso else Color.Transparent,
+        modifier = modifier.height(42.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = texto,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (seleccionado) BlancoPuro else GrisTextoSecundario
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmblemaDronTech() {
+    Box(
+        modifier = Modifier
+            .size(76.dp)
+            .clip(RoundedCornerShape(22.dp))
+            .background(NegroIntenso),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(44.dp)) {
+            val w = size.width
+            val h = size.height
+            val centro = Offset(w / 2f, h / 2f)
+            val margen = w * 0.2f
+
+            val supIzq = Offset(margen, margen)
+            val supDer = Offset(w - margen, margen)
+            val infIzq = Offset(margen, h - margen)
+            val infDer = Offset(w - margen, h - margen)
+
+            // Brazos cruzados en blanco
+            drawLine(BlancoPuro, supIzq, infDer, strokeWidth = 5f, cap = StrokeCap.Round)
+            drawLine(BlancoPuro, supDer, infIzq, strokeWidth = 5f, cap = StrokeCap.Round)
+
+            // Rotores en azul eléctrico
+            listOf(supIzq, supDer, infIzq, infDer).forEach { rotor ->
+                drawCircle(
+                    color = AzulAcento,
+                    radius = w * 0.14f,
+                    center = rotor,
+                    style = Stroke(width = 4f)
+                )
+                drawCircle(
+                    color = BlancoPuro,
+                    radius = 3.5f,
+                    center = rotor
+                )
+            }
+
+            // Núcleo central del dron
+            drawCircle(color = BlancoPuro, radius = w * 0.13f, center = centro)
+            drawCircle(color = AzulAcento, radius = w * 0.06f, center = centro)
         }
     }
 }
