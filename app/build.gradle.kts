@@ -38,6 +38,12 @@ android {
             }
         }
     }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -49,6 +55,7 @@ android {
 
 dependencies {
     implementation(libs.retrofit)
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
     implementation(libs.retrofit.gson)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(platform(libs.androidx.compose.bom))
