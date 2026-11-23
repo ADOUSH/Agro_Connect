@@ -3,9 +3,11 @@ package com.duoc.agroconnect.viewmodel
 import androidx.lifecycle.ViewModel
 import com.duoc.agroconnect.AppContainer
 import com.duoc.agroconnect.repository.AuthValidator
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
 
 class LoginViewModel : ViewModel() {
     private val repo = AppContainer.authRepository
@@ -18,7 +20,9 @@ class LoginViewModel : ViewModel() {
             _error.value = "Completa correo y contraseña"
             return false
         }
-        val ok = repo.iniciarSesion(email, clave)
+        val ok = runBlocking(Dispatchers.IO) {
+            repo.iniciarSesionApi(email, clave)
+        }
         _error.value = if (ok) "" else "Correo o contraseña incorrectos"
         return ok
     }
@@ -29,8 +33,10 @@ class LoginViewModel : ViewModel() {
             _error.value = validacion.mensajeError
             return false
         }
-        val creado = repo.registrarUsuario(nombre, email, clave)
-        _error.value = if (creado) "" else "Ese correo ya está en uso"
+        val creado = runBlocking(Dispatchers.IO) {
+            repo.registrarUsuarioApi(nombre, email, clave)
+        }
+        _error.value = if (creado) "" else "Ese correo ya está en uso o hubo un error de red"
         return creado
     }
 

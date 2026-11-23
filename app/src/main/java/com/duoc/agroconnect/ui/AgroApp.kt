@@ -128,6 +128,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+
 @Composable
 fun AgroApp() {
     var logueado by remember { mutableStateOf(AppContainer.authRepository.usuarioActual != null) }
@@ -829,20 +830,20 @@ private fun EtiquetaEstadoDron(estado: EstadoDron) {
 }
 
 /* ----------------------------- ESTADO ---------------------------- */
-
 @Composable
 fun EstadoScreen(vm: EstadoViewModel = viewModel()) {
     val context = LocalContext.current
     val dron by vm.dron.collectAsState()
     val alertas by vm.alertas.collectAsState()
+    val misiones by vm.misiones.collectAsState() // Debe decir "by", no "="
 
     val bateriaAnimada by animateFloatAsState(
         targetValue = dron.bateria / 100f,
         animationSpec = tween(600),
         label = "bateria_dron"
     )
-    val totalHectareas = remember(vm.misiones) {
-        vm.misiones.sumOf { it.hectareas }
+    val totalHectareas = remember(misiones) {
+        misiones.sumOf { it.hectareas }
     }
 
     LaunchedEffect(alertas.size) {
@@ -938,7 +939,7 @@ fun EstadoScreen(vm: EstadoViewModel = viewModel()) {
                                 color = AzulAcento
                             )
                             Text(
-                                text = "${vm.misiones.size} misiones",
+                                text = "${misiones.size} misiones",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = GrisTextoSecundario
                             )
@@ -1033,12 +1034,11 @@ fun EstadoScreen(vm: EstadoViewModel = viewModel()) {
                 color = NegroIntenso
             )
         }
-        items(vm.misiones) { m ->
+        items(misiones) { m ->
             TarjetaMision(m)
         }
     }
 }
-
 @Composable
 private fun TarjetaMision(mision: Mision) {
     val (icono, colorFondo, colorIcono) = when (mision.tipo.lowercase()) {
@@ -1073,30 +1073,22 @@ private fun TarjetaMision(mision: Mision) {
                     modifier = Modifier.size(22.dp)
                 )
             }
-
             Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(mision.tipo, fontWeight = FontWeight.Bold, color = NegroIntenso)
-                    Text(
-                        "${mision.hectareas} ha",
-                        fontWeight = FontWeight.ExtraBold,
-                        color = AzulAcento,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
                 Text(
-                    mision.descripcion,
-                    color = GrisTextoSecundario,
-                    style = MaterialTheme.typography.bodyMedium
+                    text = mision.tipo,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = NegroIntenso
                 )
                 Text(
-                    mision.fecha,
+                    text = mision.descripcion,
                     style = MaterialTheme.typography.bodySmall,
                     color = GrisTextoSecundario
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "${mision.fecha} · ${mision.hectareas} ha",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = AzulAcento
                 )
             }
         }

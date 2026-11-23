@@ -2,47 +2,87 @@ package com.duoc.agroconnect.repository
 
 import com.duoc.agroconnect.model.EstadoPedido
 import com.duoc.agroconnect.model.Pedido
+import com.duoc.agroconnect.network.PedidoDto
+import com.duoc.agroconnect.network.PedidoEstadoRequest
+import com.duoc.agroconnect.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.util.Calendar
+import kotlinx.coroutines.launch
 
 class PedidoRepository {
 
-    private val _pedidos = MutableStateFlow(
-        listOf(
-            Pedido(
-                id = 1,
-                producto = "Repuesto de hélice",
-                cantidad = 4,
-                notas = "Para el T-100",
-                estado = EstadoPedido.EN_CAMINO,
-                fechaPedido = fecha(29, 10, 2026, 10, 30)
-            ),
-            Pedido(
-                id = 2,
-                producto = "Batería de repuesto",
-                cantidad = 2,
-                notas = "",
-                estado = EstadoPedido.ENTREGADO,
-                fechaPedido = fecha(27, 10, 2026, 9, 15),
-                fechaEntrega = fecha(28, 10, 2026, 16, 40)
-            )
-        )
-    )
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private val _pedidos = MutableStateFlow<List<Pedido>>(emptyList())
     val pedidos: StateFlow<List<Pedido>> = _pedidos.asStateFlow()
 
-    fun agregar(producto: String, cantidad: Int, notas: String) {
-        _pedidos.update { lista ->
-            val nuevoId = (lista.maxOfOrNull { it.id } ?: 0) + 1
-            listOf(Pedido(nuevoId, producto, cantidad, notas)) + lista
+    init {
+        sincronizarDesdeApi()
+    }
+
+    fun sincronizarDesdeApi() {
+        scope.launch {
+            try {
+                val remotos = RetrofitClient.api.obtenerPedidos()
+                _pedidos.value = remotos.map { it.toDomain() }.reversed()
+            } catch (_: Exception) {
+            }
         }
     }
 
-    private fun fecha(dia: Int, mes: Int, anio: Int, hora: Int, minuto: Int): Long =
-        Calendar.getInstance().apply {
-            clear()
-            set(anio, mes - 1, dia, hora, minuto)
-        }.timeInMillis
+    fun agregar(producto: String, cantidad: Int, notas: String) {
+        val ahora = System.currentTimeMillis()
+        _pedidos.update { lista ->
+            val nuevoId = (lista.maxOfOrNull { it.id } ?: 0) + 1
+            listOf(
+                Pedido(
+                    id = nuevoId,
+                    producto = producto,
+                    cantidad = cantidad,
+                    notas = notas,
+                    estado = EstadoPedido.PENDIENTE,
+                    fechaPedido = ahora,
+                    fechaEntrega = null
+                )
+            ) + lista
+        }
+        scope.launch {
+            try {
+                RetrofitClient.api.crearPedido(
+                    PedidoDto(
+                        producto = producto,
+                        cantidad = cantidad,
+                        notas = notas,
+                        estado = EstadoPedido.PENDIENTE.name,
+                        fechaPedido = ahora,
+                        fechaEntrega = null
+                    )
+                )
+                sincronizarDesdeApi()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    fun marcarEntregado(pedidoId: Int) {
+        val entrega = System.currentTimeMillis()
+        scope.launch {
+            try {
+                RetrofitClient.api.actualizarEstadoPedido(
+                    id = pedidoId,
+                    request = PedidoEstadoRequest(
+                        estado = EstadoPedido.ENTREGADO.name,
+                        fechaEntrega = entrega
+                    )
+                )
+                sincronizarDesdeApi()
+            } catch (_: Exception) {
+            }
+        }
+    }
 }

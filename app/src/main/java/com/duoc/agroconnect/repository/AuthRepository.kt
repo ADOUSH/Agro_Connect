@@ -1,87 +1,82 @@
 package com.duoc.agroconnect.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.edit
 import com.duoc.agroconnect.model.Usuario
+import com.duoc.agroconnect.network.RegistroRequest
+import com.duoc.agroconnect.network.RetrofitClient
 
 class AuthRepository(context: Context) {
 
-    private val prefs = context.getSharedPreferences(ARCHIVO_SESION, Context.MODE_PRIVATE)
-
-    private val emailDemo = "agricultor@tecmundo.cl"
-    private val claveDemo = "agro1234"
+    private val prefs = context.getSharedPreferences("sesion", Context.MODE_PRIVATE)
 
     var usuarioActual: Usuario? = cargarSesion()
         private set
 
-    fun iniciarSesion(email: String, clave: String): Boolean {
+    suspend fun iniciarSesionApi(email: String, clave: String): Boolean {
         val emailLimpio = email.trim().lowercase()
-
-        // 1. Validar usuario de prueba
-        if (emailLimpio == emailDemo && clave == claveDemo) {
-            usuarioActual = Usuario(emailDemo, NOMBRE_DEMO)
-            prefs.edit {
-                putString(CLAVE_EMAIL_SESION, emailDemo)
-                putString(CLAVE_NOMBRE_SESION, NOMBRE_DEMO)
+        return try {
+            val usuarios = RetrofitClient.api.obtenerUsuarios()
+            val encontrado = usuarios.find { it.email.trim().lowercase() == emailLimpio }
+            if (encontrado != null) {
+                guardarSesion(encontrado.toDomain())
+                true
+            } else if (emailLimpio == "agricultor@tecmundo.cl" && clave == "agro1234") {
+                guardarSesion(Usuario(emailLimpio, "Agricultor"))
+                true
+            } else {
+                false
             }
-            return true
+        } catch (e: Exception) {
+            Log.e("XANO_AUTH", "Error login: ${e.message}", e)
+            if (emailLimpio == "agricultor@tecmundo.cl" && clave == "agro1234") {
+                guardarSesion(Usuario(emailLimpio, "Agricultor"))
+                true
+            } else {
+                false
+            }
         }
+    }
 
-        // 2. Validar usuario registrado en SharedPreferences
-        val emailRegistrado = prefs.getString(CLAVE_REG_EMAIL, null)
-        val claveRegistrada = prefs.getString(CLAVE_REG_PASS, null)
-        val nombreRegistrado = prefs.getString(CLAVE_REG_NOMBRE, "Agricultor") ?: "Agricultor"
-
-        return if (emailLimpio == emailRegistrado && clave == claveRegistrada) {
-            usuarioActual = Usuario(emailLimpio, nombreRegistrado)
-            prefs.edit {
-                putString(CLAVE_EMAIL_SESION, emailLimpio)
-                putString(CLAVE_NOMBRE_SESION, nombreRegistrado)
+    suspend fun registrarUsuarioApi(nombre: String, email: String, clave: String): Boolean {
+        val emailLimpio = email.trim().lowercase()
+        val nombreLimpio = nombre.trim()
+        return try {
+            val existentes = RetrofitClient.api.obtenerUsuarios()
+            if (existentes.any { it.email.trim().lowercase() == emailLimpio }) {
+                return false
             }
+            val creado = RetrofitClient.api.registrar(
+                RegistroRequest(email = emailLimpio, nombre = nombreLimpio)
+            )
+            guardarSesion(creado.toDomain())
             true
-        } else {
+        } catch (e: Exception) {
+            Log.e("XANO_AUTH", "Error registro: ${e.message}", e)
             false
         }
     }
 
-    fun registrarUsuario(nombre: String, email: String, clave: String): Boolean {
-        val emailLimpio = email.trim().lowercase()
-        val nombreLimpio = nombre.trim()
-
-        if (emailLimpio == emailDemo) return false
-
+    private fun guardarSesion(usuario: Usuario) {
+        usuarioActual = usuario
         prefs.edit {
-            putString(CLAVE_REG_NOMBRE, nombreLimpio)
-            putString(CLAVE_REG_EMAIL, emailLimpio)
-            putString(CLAVE_REG_PASS, clave)
-            putString(CLAVE_EMAIL_SESION, emailLimpio)
-            putString(CLAVE_NOMBRE_SESION, nombreLimpio)
+            putString("email", usuario.email)
+            putString("nombre", usuario.nombre)
         }
-        usuarioActual = Usuario(emailLimpio, nombreLimpio)
-        return true
     }
 
     fun cerrarSesion() {
         usuarioActual = null
         prefs.edit {
-            remove(CLAVE_EMAIL_SESION)
-            remove(CLAVE_NOMBRE_SESION)
+            remove("email")
+            remove("nombre")
         }
     }
 
     private fun cargarSesion(): Usuario? {
-        val email = prefs.getString(CLAVE_EMAIL_SESION, null) ?: return null
-        val nombre = prefs.getString(CLAVE_NOMBRE_SESION, NOMBRE_DEMO) ?: NOMBRE_DEMO
+        val email = prefs.getString("email", null) ?: return null
+        val nombre = prefs.getString("nombre", "Agricultor") ?: "Agricultor"
         return Usuario(email, nombre)
-    }
-
-    private companion object {
-        const val ARCHIVO_SESION = "sesion"
-        const val CLAVE_EMAIL_SESION = "email"
-        const val CLAVE_NOMBRE_SESION = "nombre"
-        const val CLAVE_REG_NOMBRE = "reg_nombre"
-        const val CLAVE_REG_EMAIL = "reg_email"
-        const val CLAVE_REG_PASS = "reg_pass"
-        const val NOMBRE_DEMO = "Agricultor"
     }
 }
